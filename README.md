@@ -1,2 +1,2 @@
 # smart-mail-slacker
-Transfer email based on customizable rules
+Transfer emails based on the customizable rules
