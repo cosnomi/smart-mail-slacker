@@ -1,14 +1,14 @@
-from main import ImapIdleReceiver
-
 import yaml
+import os.path
+from .main import ImapIdleReceiver
 
 
 def on_receive(res):
-    print(res)
+    print('in on_receive(): {}'.format(res))
 
 
 def main():
-    with open('config.yml') as f:
+    with open(os.path.join(os.path.dirname(__file__), 'config.yml')) as f:
         data = yaml.load(f)
         HOST = data['HOST']
         USERNAME = data['USERNAME']
