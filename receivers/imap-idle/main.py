@@ -1,5 +1,7 @@
 from imapclient import IMAPClient
+from datetime import datetime
 from last_fetched_uid_mock import get_last_fetched_uid, set_last_fetched_uid
+from ..utils import MessageData
 
 
 class ImapIdleReceiver:
@@ -24,21 +26,25 @@ class ImapIdleReceiver:
                 for _ in range(connection_refresh_sec // timeout):
                     responses = server.idle_check(timeout=timeout)
                     if responses:
-                        print("Server sent:",
-                              responses if responses else "nothing")
                         server.idle_done()
-                        print('last uid: {}'.format(get_last_fetched_uid()))
                         messages = server.search(
                             ['UID',
                              str(get_last_fetched_uid() + 1) + ':*'])
-                        print('mes: {}'.format(messages))
                         if len(messages) == 0:
                             server.idle()
                             continue
                         set_last_fetched_uid(messages[-1])
-                        res = server.fetch(messages, ['BODY.PEEK[TEXT]'])
-                        print(res)
-                        on_receive(res)  # TODO
+                        res = server.fetch(
+                            messages,
+                            ['BODY.PEEK[TEXT]', 'ENVELOPE', 'INTERNALDATE'])
+                        on_receive(
+                            MessageData({
+                                'internal_date': res[b'INTERNALDATE'],
+                                'subject': res[b'ENVELOPE'].subject,
+                                'body': res[b'BODY[TEXT]'],
+                                'from': res[b'ENVELOPE'].from_,
+                                'to': res[b'ENVELOPE'].to
+                            }))
                         server.idle()  # TODO: Reset refresh counter here
             except KeyboardInterrupt:
                 break
