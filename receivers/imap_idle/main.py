@@ -34,17 +34,27 @@ class ImapIdleReceiver:
                             server.idle()
                             continue
                         set_last_fetched_uid(messages[-1])
-                        res = server.fetch(
+                        res_dict = server.fetch(
                             messages,
                             ['BODY.PEEK[TEXT]', 'ENVELOPE', 'INTERNALDATE'])
-                        on_receive(
-                            MessageData({
-                                'internal_date': res[b'INTERNALDATE'],
-                                'subject': res[b'ENVELOPE'].subject,
-                                'body': res[b'BODY[TEXT]'],
-                                'from': res[b'ENVELOPE'].from_,
-                                'to': res[b'ENVELOPE'].to
-                            }))
+                        for res in res_dict.values():
+                            on_receive(
+                                MessageData({
+                                    'internal_date':
+                                    res[b'INTERNALDATE'],
+                                    'subject':
+                                    res[b'ENVELOPE'].subject.decode(),
+                                    'body':
+                                    res[b'BODY[TEXT]'].decode(),
+                                    'from': [
+                                        self.convert_address(x)
+                                        for x in res[b'ENVELOPE'].from_
+                                    ],
+                                    'to': [
+                                        self.convert_address(x)
+                                        for x in res[b'ENVELOPE'].to
+                                    ]
+                                }))
                         server.idle()  # TODO: Reset refresh counter here
             except KeyboardInterrupt:
                 break
@@ -54,3 +64,9 @@ class ImapIdleReceiver:
 
     def stop(self):
         self.should_loop_continue = False
+
+    def convert_address(self, addr_obj):
+        """
+        Converts `Address` object returned by imapclient into decoded email address string.
+        """
+        return addr_obj.mailbox.decode() + '@' + addr_obj.host.decode()
