@@ -1,6 +1,6 @@
 from imapclient import IMAPClient
 from datetime import datetime
-from last_fetched_uid_mock import get_last_fetched_uid, set_last_fetched_uid
+from .last_fetched_uid_mock import get_last_fetched_uid, set_last_fetched_uid
 from ..utils import MessageData
 
 
