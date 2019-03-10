@@ -33,12 +33,13 @@ class ImapIdleReceiver:
                              str(get_last_fetched_uid() + 1) + ':*'])
                         print('mes: {}'.format(messages))
                         if len(messages) == 0:
+                            server.idle()
                             continue
                         set_last_fetched_uid(messages[-1])
                         res = server.fetch(messages, ['BODY.PEEK[TEXT]'])
                         print(res)
                         on_receive(res)  # TODO
-                        server.idle()
+                        server.idle()  # TODO: Reset refresh counter here
             except KeyboardInterrupt:
                 break
             server.idle_done()
